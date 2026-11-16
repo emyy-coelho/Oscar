@@ -436,3 +436,283 @@ db.registros.find(
   nome_do_filme: 'Training Day'
 }
 ```
+---
+
+## Nível 4: Vencedores Históricos
+
+### 4.1 Quem ganhou o primeiro Oscar para Melhor Atriz (ACTRESS)? Em que ano e por qual filme?
+
+```js
+db.registros.find(
+  { categoria: "ACTRESS", vencedor: 1 },
+  { _id: 0, nome_do_indicado: 1, ano_cerimonia: 1, nome_do_filme: 1 }
+).sort({ ano_cerimonia: 1 }).limit(1)
+```
+
+**R:**
+
+```js
+{
+  ano_cerimonia: 1928,
+  nome_do_indicado: 'Janet Gaynor',
+  nome_do_filme: '7th Heaven'
+}
+```
+
+---
+
+### 4.2 Quem ganhou o primeiro Oscar para Melhor Ator (ACTOR)? Em que ano e por qual filme?
+
+```js
+db.registros.find(
+  { categoria: "ACTOR", vencedor: 1 },
+  { _id: 0, nome_do_indicado: 1, ano_cerimonia: 1, nome_do_filme: 1 }
+).sort({ ano_cerimonia: 1 }).limit(1)
+```
+
+**R:**
+
+```js
+{
+  ano_cerimonia: 1928,
+  nome_do_indicado: 'Emil Jannings',
+  nome_do_filme: 'The Last Command'
+}
+```
+
+---
+
+### 4.3 Quantos vencedores existem ao todo na base de dados?
+
+```js
+db.registros.countDocuments({ vencedor: 1 })
+```
+
+**R:** 2474
+
+---
+
+### 4.4 Liste todos os filmes que ganharam o Oscar de Melhor Filme (categoria "OUTSTANDING PICTURE" ou "BEST PICTURE").
+
+```js
+db.registros.find(
+  { categoria: { $in: ["OUTSTANDING PICTURE", "BEST PICTURE"] }, vencedor: 1 },
+  { _id: 0, ano_cerimonia: 1, categoria: 1, nome_do_filme: 1 }
+).sort({ ano_cerimonia: 1 })
+```
+
+**R:**
+
+- Wings
+- The Broadway Melody
+- Lawrence of Arabia
+- Tom Jones
+- My Fair Lady
+- The Sound of Music
+- A Man for All Seasons
+- In the Heat of the Night
+- Oliver!
+- Midnight Cowboy
+- Patton
+- The French Connection
+- The Godfather
+- The Sting
+- The Godfather Part II
+- One Flew over the Cuckoo's Nest
+- Rocky
+- Annie Hall
+- The Deer Hunter
+- Kramer vs. Kramer
+
+---
+
+### 4.5 Quantos filmes diferentes já ganharam o Oscar?
+
+```js
+db.registros.distinct("nome_do_filme", { vencedor: 1 }).length
+```
+
+**R:** 1336
+
+---
+
+## Nível 5: Análise de Indicações
+
+### 5.1 Quais atores/atrizes foram indicados mais de uma vez? Liste o nome e o número de indicações.
+
+```js
+db.registros.aggregate([
+  { $match: { categoria: /ACTOR|ACTRESS/ } },
+  { $group: { _id: "$nome_do_indicado", indicacoes: { $sum: 1 } } },
+  { $match: { indicacoes: { $gt: 1 } } },
+  { $sort: { indicacoes: -1 } }
+])
+```
+
+**R:**
+
+| Nome | Indicações |
+|------|-----------|
+| Meryl Streep | 21 |
+| Jack Nicholson | 12 |
+| Katharine Hepburn | 12 |
+| Bette Davis | 11 |
+| Denzel Washington | 9 |
+| Spencer Tracy | 9 |
+| Laurence Olivier | 9 |
+| Paul Newman | 9 |
+| Al Pacino | 9 |
+| Robert De Niro | 8 |
+| Marlon Brando | 8 |
+| Peter O'Toole | 8 |
+| Glenn Close | 8 |
+| Judi Dench | 8 |
+| Cate Blanchett | 8 |
+| Geraldine Page | 8 |
+| Jeff Bridges | 7 |
+| Robert Duvall | 7 |
+| Kate Winslet | 7 |
+
+---
+
+### 5.2 Qual ator ou atriz tem o maior número de indicações na história do Oscar?
+
+```js
+db.registros.aggregate([
+  { $match: { categoria: /ACTOR|ACTRESS/ } },
+  { $group: { _id: "$nome_do_indicado", indicacoes: { $sum: 1 } } },
+  { $sort: { indicacoes: -1 } },
+  { $limit: 1 }
+])
+```
+
+**R:**
+
+```js
+{
+  _id: 'Meryl Streep',
+  indicacoes: 21
+}
+```
+
+---
+
+### 5.3 Quais atores foram indicados mais de 3 vezes, mas nunca ganharam?
+
+```js
+db.registros.aggregate([
+  { $match: { categoria: /ACTOR|ACTRESS/ } },
+  {
+    $group: {
+      _id: "$nome_do_indicado",
+      indicacoes: { $sum: 1 },
+      vitorias: { $sum: "$vencedor" }
+    }
+  },
+  { $match: { indicacoes: { $gt: 3 }, vitorias: 0 } },
+  { $sort: { indicacoes: -1 } }
+])
+```
+
+**R:**
+
+- Peter O'Toole
+- Glenn Close
+- Richard Burton
+- Amy Adams
+- Deborah Kerr
+- Thelma Ritter
+- Bradley Cooper
+- Annette Bening
+- Arthur Kennedy
+- Irene Dunne
+- Albert Finney
+- Michelle Williams
+- Mickey Rooney
+- Ed Harris
+- Mark Ruffalo
+- Jane Alexander
+- Rosalind Russell
+- Barbara Stanwyck
+- Agnes Moorehead
+- Montgomery Clift
+
+---
+
+### 5.4 Encontre todos os artistas que foram indicados em categorias diferentes (ex: ator e diretor).
+
+```js
+db.registros.aggregate([
+  {
+    $group: {
+      _id: "$nome_do_indicado",
+      categorias: { $addToSet: "$categoria" }
+    }
+  },
+  { $match: { "categorias.1": { $exists: true } } },
+  { $project: { _id: 1, categorias: 1, total_categorias: { $size: "$categorias" } } },
+  { $sort: { total_categorias: -1 } }
+])
+```
+
+**R:**
+
+- Metro-Goldwyn-Mayer
+- Warner Bros.
+- Paramount
+- RKO Radio
+- Alex North
+- Alfred Newman
+- Walt Disney, Producer
+- Victor Young
+- National Film Board of Canada
+- 20th Century-Fox
+- Franz Waxman
+- Robert Benton
+- Paul Newman
+- John Williams
+- Ingmar Bergman
+- Jerry Goldsmith
+- Elmer Bernstein
+- George Seaton
+- Herbert Stothart
+- Paddy Chayefsky
+
+---
+
+### 5.5 Quantos indicados têm exatamente 1 indicação na história?
+
+```js
+db.registros.aggregate([
+  { $group: { _id: "$nome_do_indicado", indicacoes: { $sum: 1 } } },
+  { $match: { indicacoes: 1 } },
+  { $count: "total_com_1_indicacao" }
+])
+```
+
+**R:**
+
+```js
+{ total_com_1_indicacao: 5594 }
+```
+
+---
+
+### 5.6 Qual o maior número de indicados em um único ano? Essa é uma pergunta franca.
+
+```js
+db.registros.aggregate([
+  { $group: { _id: "$ano_cerimonia", total_indicados: { $sum: 1 } } },
+  { $sort: { total_indicados: -1 } },
+  { $limit: 1 }
+])
+```
+
+**R:**
+
+```js
+{
+  _id: 1943,
+  total_indicados: 186
+}
+```
