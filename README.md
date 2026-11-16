@@ -248,3 +248,191 @@ db.registros.aggregate([
 - DIRECTING
 - DIRECTING (Comedy Picture)
 - DIRECTING (Dramatic Picture)
+
+  ---
+
+## Nível 3: Atores e Atrizes Famosos
+
+### Natalie Portman
+
+#### 3.1 Quantas vezes Natalie Portman foi indicada ao Oscar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Natalie Portman" })
+```
+
+**R:** 3
+
+---
+
+#### 3.2 Quantos Oscars Natalie Portman ganhou?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Natalie Portman", vencedor: 1 })
+```
+
+**R:** 1
+
+---
+
+#### 3.3 Em quais anos e por quais filmes Natalie Portman foi indicada?
+
+```js
+db.registros.find(
+  { nome_do_indicado: "Natalie Portman" },
+  { _id: 0, ano_cerimonia: 1, nome_do_filme: 1 }
+).sort({ ano_cerimonia: 1 })
+```
+
+**R:**
+
+```js
+{
+  ano_cerimonia: 2005,
+  nome_do_filme: 'Closer'
+}
+{
+  ano_cerimonia: 2011,
+  nome_do_filme: 'Black Swan'
+}
+{
+  ano_cerimonia: 2017,
+  nome_do_filme: 'Jackie'
+}
+```
+
+---
+
+#### 3.4 Liste todas as indicações de Natalie Portman mostrando: ano, categoria, filme e se venceu.
+
+```js
+db.registros.find(
+  { nome_do_indicado: "Natalie Portman" },
+  { _id: 0, ano_cerimonia: 1, categoria: 1, nome_do_filme: 1, vencedor: 1 }
+).sort({ ano_cerimonia: 1 })
+```
+
+**R:**
+
+```js
+{
+  ano_cerimonia: 2005,
+  categoria: 'ACTRESS IN A SUPPORTING ROLE',
+  nome_do_filme: 'Closer',
+  vencedor: 0
+}
+{
+  ano_cerimonia: 2011,
+  categoria: 'ACTRESS IN A LEADING ROLE',
+  nome_do_filme: 'Black Swan',
+  vencedor: 1
+}
+{
+  ano_cerimonia: 2017,
+  categoria: 'ACTRESS IN A LEADING ROLE',
+  nome_do_filme: 'Jackie',
+  vencedor: 0
+}
+```
+
+---
+
+### Viola Davis
+
+#### 3.5 Quantas vezes Viola Davis foi indicada ao Oscar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Viola Davis" })
+```
+
+**R:** 4
+
+---
+
+#### 3.6 Quantos Oscars Viola Davis ganhou?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Viola Davis", vencedor: 1 })
+```
+
+**R:** 1
+
+---
+
+#### 3.7 Por quais filmes Viola Davis foi indicada?
+
+```js
+db.registros.distinct("nome_do_filme", { nome_do_indicado: "Viola Davis" })
+```
+
+**R:** `[ 'Doubt', 'Fences', "Ma Rainey's Black Bottom", 'The Help' ]`
+
+---
+
+### Amy Adams
+
+#### 3.8 Amy Adams já ganhou algum Oscar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Amy Adams", vencedor: 1 })
+```
+
+**R:** Não (0)
+
+---
+
+#### 3.9 Quantas vezes Amy Adams foi indicada sem ganhar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Amy Adams", vencedor: 0 })
+```
+
+**R:** 6
+
+---
+
+### Denzel Washington
+
+#### 3.10 Denzel Washington já ganhou algum Oscar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Denzel Washington", vencedor: 1 })
+```
+
+**R:** 2
+
+---
+
+#### 3.11 Quantas vezes Denzel Washington foi indicado ao Oscar?
+
+```js
+db.registros.countDocuments({ nome_do_indicado: "Denzel Washington" })
+```
+
+**R:** 9
+
+---
+
+#### 3.12 Liste todos os Oscars que Denzel Washington ganhou (ano, categoria, filme).
+
+```js
+db.registros.find(
+  { nome_do_indicado: "Denzel Washington", vencedor: 1 },
+  { _id: 0, ano_cerimonia: 1, categoria: 1, nome_do_filme: 1 }
+).sort({ ano_cerimonia: 1 })
+```
+
+**R:**
+
+```js
+{
+  ano_cerimonia: 1990,
+  categoria: 'ACTOR IN A SUPPORTING ROLE',
+  nome_do_filme: 'Glory'
+}
+{
+  ano_cerimonia: 2002,
+  categoria: 'ACTOR IN A LEADING ROLE',
+  nome_do_filme: 'Training Day'
+}
+```
